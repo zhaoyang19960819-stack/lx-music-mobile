@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useMemo, useEffect } from 'react'
+import { memo, useState, useRef, useMemo, useEffect, useCallback, type ElementRef } from 'react'
 import { View, AppState } from 'react-native'
 
 import Header from './components/Header'
@@ -11,7 +11,8 @@ import Lyric from './Lyric'
 import { screenkeepAwake, screenUnkeepAwake } from '@/utils/nativeModules/utils'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
 import { createStyle } from '@/utils/tools'
-// import { useTheme } from '@/store/theme/hook'
+import { useTheme } from '@/store/theme/hook'
+import { scaleSizeH } from '@/utils/pixelRatio'
 
 const LyricPage = ({ activeIndex }: { activeIndex: number }) => {
   const initedRef = useRef(false)
@@ -29,9 +30,10 @@ const LyricPage = ({ activeIndex }: { activeIndex: number }) => {
 
 // global.iskeep = false
 export default memo(({ componentId }: { componentId: string }) => {
-  // const theme = useTheme()
+  const theme = useTheme()
   const [pageIndex, setPageIndex] = useState(0)
   const showLyricRef = useRef(false)
+  const pagerRef = useRef<ElementRef<typeof PagerView>>(null)
 
   const onPageSelected = ({ nativeEvent }: PagerViewOnPageSelectedEvent) => {
     setPageIndex(nativeEvent.position)
@@ -42,6 +44,11 @@ export default memo(({ componentId }: { componentId: string }) => {
       screenUnkeepAwake()
     }
   }
+
+  // 点击封面切到歌词页
+  const showLyric = useCallback(() => {
+    pagerRef.current?.setPage(1)
+  }, [])
 
   useEffect(() => {
     let appstateListener = AppState.addEventListener('change', (state) => {
@@ -75,47 +82,52 @@ export default memo(({ componentId }: { componentId: string }) => {
       <Header />
       <View style={styles.container}>
         <PagerView
+          ref={pagerRef}
           onPageSelected={onPageSelected}
           // onPageScrollStateChanged={onPageScrollStateChanged}
           style={styles.pagerView}
         >
           <View collapsable={false}>
-            <Pic componentId={componentId} />
+            <Pic componentId={componentId} onPress={showLyric} />
           </View>
           <View collapsable={false}>
             <LyricPage activeIndex={pageIndex} />
           </View>
         </PagerView>
-        {/* <View style={styles.pageIndicator} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pageIndicator}>
-          <View style={{ ...styles.pageIndicatorItem, backgroundColor: pageIndex == 0 ? theme['c-primary-light-100-alpha-700'] : theme['c-primary-alpha-900'] }}></View>
-          <View style={{ ...styles.pageIndicatorItem, backgroundColor: pageIndex == 1 ? theme['c-primary-light-100-alpha-700'] : theme['c-primary-alpha-900'] }}></View>
-        </View> */}
+        <View style={styles.pageIndicator} pointerEvents='none'>
+          <View style={[styles.pageIndicatorItem, { backgroundColor: theme['c-font'], opacity: pageIndex == 0 ? 0.9 : 0.25 }]} />
+          <View style={[styles.pageIndicatorItem, { backgroundColor: theme['c-font'], opacity: pageIndex == 1 ? 0.9 : 0.25 }]} />
+        </View>
         <Player />
       </View>
     </>
   )
 })
 
+
 const styles = createStyle({
   container: {
     flex: 1,
     flexDirection: 'column',
+    // backgroundColor: '#ccc',
   },
   pagerView: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    // height: '100%',
+    // backgroundColor: '#333',
   },
-  // pageIndicator: {
-  //   flex: 0,
-  //   flexDirection: 'row',
-  //   justifyContent: 'center',
-  //   paddingTop: 10,
-  //   // backgroundColor: 'rgba(0,0,0,0.1)',
-  // },
-  // pageIndicatorItem: {
-  //   height: 3,
-  //   width: '5%',
-  //   marginLeft: 2,
-  //   marginRight: 2,
-  //   borderRadius: 2,
-  // },
+  pageIndicator: {
+    flex: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: scaleSizeH(6),
+  },
+  pageIndicatorItem: {
+    width: scaleSizeH(5),
+    height: scaleSizeH(5),
+    borderRadius: scaleSizeH(3),
+    marginHorizontal: scaleSizeH(3),
+  },
 })
