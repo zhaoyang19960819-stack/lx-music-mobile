@@ -142,8 +142,8 @@ export default memo(({ progress, buffered, duration, onDragChange, onSeek }: App
   return (
     <View style={styles.container} onLayout={onLayout} {...panResponder.panHandlers}>
       <View style={styles.barWrap} pointerEvents="none">
-        <Animated.View style={[styles.track, { backgroundColor: theme['c-primary-alpha-800'], transform: [{ scaleY: barScaleY }] }]} />
-        <Animated.View style={[styles.bar, { backgroundColor: theme['c-primary-alpha-600'], transform: bufferedTransform }]} />
+        <Animated.View style={[styles.track, { backgroundColor: theme['c-primary'], transform: [{ scaleY: barScaleY }] }]} />
+        <Animated.View style={[styles.bar, { backgroundColor: theme['c-primary'], transform: bufferedTransform }]} />
         <Animated.View style={[styles.bar, { backgroundColor: theme['c-font'], transform: fillTransform }]} />
         <Animated.View
           style={[styles.thumb, {
@@ -173,10 +173,12 @@ const styles = StyleSheet.create({
   track: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: BAR_HEIGHT / 2,
+    opacity: 0.22,
   },
   bar: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: BAR_HEIGHT / 2,
+    opacity: 0.45,
   },
   thumb: {
     position: 'absolute',
