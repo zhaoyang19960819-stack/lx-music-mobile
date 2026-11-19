@@ -11,11 +11,15 @@ import { useBgPic } from '@/store/common/hook'
 
 interface Props {
   children: React.ReactNode
+  /**
+   * 为 true 时不渲染页面背景，由页面自行绘制背景（如播放详情页的封面模糊背景）
+   */
+  transparent?: boolean
 }
 
 const BLUR_RADIUS = Math.max(scaleSizeAbsHR(18), 10)
 
-export default ({ children }: Props) => {
+export default ({ children, transparent }: Props) => {
   const theme = useTheme()
   const windowSize = useWindowSize()
   const pic = useBgPic()
@@ -73,7 +77,7 @@ export default ({ children }: Props) => {
   return (
     <>
       <SizeView />
-      {pic ? picComponent : themeComponent}
+      {transparent ? <View style={{ flex: 1 }}>{children}</View> : pic ? picComponent : themeComponent}
     </>
   )
 }
