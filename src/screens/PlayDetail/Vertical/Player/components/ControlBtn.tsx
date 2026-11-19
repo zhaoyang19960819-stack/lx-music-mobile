@@ -41,16 +41,16 @@ export default memo(() => {
 
   return (
     <View style={styles.container}>
-      <Btn icon='prevMusic' size={24} color={theme['c-button-font']} onPress={handlePlayPrev} />
+      <Btn icon='prevMusic' size={26} color={theme['c-button-font']} onPress={handlePlayPrev} />
       <Btn
         icon={isPlay ? 'pause' : 'play'}
-        size={32}
+        size={34}
         color={theme['c-button-font']}
         activeScale={0.9}
         style={styles.playBtn}
         onPress={togglePlay}
       />
-      <Btn icon='nextMusic' size={24} color={theme['c-button-font']} onPress={handlePlayNext} />
+      <Btn icon='nextMusic' size={26} color={theme['c-button-font']} onPress={handlePlayNext} />
     </View>
   )
 })
@@ -61,9 +61,9 @@ const styles = createStyle({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: scaleSizeH(14),
+    paddingVertical: scaleSizeH(10),
   },
   playBtn: {
-    marginHorizontal: scaleSizeW(40),
+    marginHorizontal: scaleSizeW(46),
   },
 })
