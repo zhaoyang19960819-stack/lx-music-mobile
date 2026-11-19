@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, Easing, View } from 'react-native'
+
 import { createStyle } from '@/utils/tools'
 import { usePlayerMusicInfo } from '@/store/player/hook'
 import { useWindowSize } from '@/utils/hooks'
@@ -7,16 +8,23 @@ import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import { useNavigationComponentDidAppear } from '@/navigation'
 import { HEADER_HEIGHT } from './components/Header'
 import Image from '@/components/common/Image'
+import Text from '@/components/common/Text'
+import PressScale from './components/PressScale'
+import { useTheme } from '@/store/theme/hook'
 import { useStatusbarHeight } from '@/store/common/hook'
 import commonState from '@/store/common/state'
 import { scaleSizeH, scaleSizeW } from '@/utils/pixelRatio'
 
+/** 播放控制区大致占用的高度（进度条 + 时间 + 按钮 + 指示点） */
+const PLAYER_HEIGHT = 236
+/** 封面下方歌曲信息区域的高度 */
+const INFO_HEIGHT = 78
 
-export default ({ componentId }: { componentId: string }) => {
+export default ({ componentId, onPress }: { componentId: string, onPress?: () => void }) => {
   const musicInfo = usePlayerMusicInfo()
+  const theme = useTheme()
   const { width: winWidth, height: winHeight } = useWindowSize()
   const statusBarHeight = useStatusbarHeight()
-
   const [animated, setAnimated] = useState(!!commonState.componentIds.playDetail)
   const [pic, setPic] = useState(musicInfo.pic)
   const [prevPic, setPrevPic] = useState(musicInfo.pic)
@@ -48,8 +56,8 @@ export default ({ componentId }: { componentId: string }) => {
   // console.log('render pic')
 
   const style = useMemo(() => {
-    const availableHeight = winHeight - statusBarHeight - HEADER_HEIGHT - scaleSizeH(232)
-    const imgWidth = Math.max(Math.min(winWidth * 0.76, availableHeight), scaleSizeW(140))
+    const availableHeight = winHeight - statusBarHeight - HEADER_HEIGHT - scaleSizeH(PLAYER_HEIGHT) - scaleSizeH(INFO_HEIGHT)
+    const imgWidth = Math.max(Math.min(winWidth - scaleSizeW(56), availableHeight), scaleSizeW(140))
     return {
       width: imgWidth,
       height: imgWidth,
@@ -59,11 +67,24 @@ export default ({ componentId }: { componentId: string }) => {
 
   return (
     <View style={styles.content}>
-      <View style={[styles.picContent, style, { elevation: animated ? 8 : 0 }]}>
-        {prevPic && prevPic !== pic ? <Image url={prevPic} style={{ ...style, position: 'absolute' }} /> : null}
-        <Animated.View style={[style, { opacity: fade }]}>
-          <Image url={pic} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic} style={style} />
-        </Animated.View>
+      <View style={[styles.picShadow, style, { elevation: animated ? 8 : 0 }]}>
+        <PressScale
+          onPress={onPress}
+          activeScale={0.97}
+          hitSlop={4}
+          style={[styles.picContent, style]}
+          contentStyle={styles.picInner}
+        >
+          {prevPic && prevPic !== pic ? <Image url={prevPic} style={[styles.picInner, { position: 'absolute' }]} /> : null}
+          <Animated.View style={[styles.picInner, { opacity: fade }]}>
+            <Image url={pic} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic} style={styles.picInner} />
+          </Animated.View>
+        </PressScale>
+      </View>
+      <View style={[styles.info, { width: style.width }]}>
+        <Text size={17} numberOfLines={1} style={styles.musicName}>{musicInfo.name || '-'}</Text>
+        {musicInfo.singer ? <Text size={13} color={theme['c-font-label']} numberOfLines={1} style={styles.musicSinger}>{musicInfo.singer}</Text> : null}
+        {musicInfo.album ? <Text size={11} color={theme['c-500']} numberOfLines={1} style={styles.musicAlbum}>{musicInfo.album}</Text> : null}
       </View>
     </View>
   )
@@ -75,13 +96,33 @@ const styles = createStyle({
     flexShrink: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: scaleSizeW(28),
   },
-  picContent: {
+  picShadow: {
     backgroundColor: 'rgba(0,0,0,0)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
+  },
+  picContent: {
     overflow: 'hidden',
+  },
+  picInner: {
+    width: '100%',
+    height: '100%',
+  },
+  info: {
+    alignItems: 'center',
+    marginTop: scaleSizeH(22),
+  },
+  musicName: {
+    fontWeight: '600',
+  },
+  musicSinger: {
+    marginTop: scaleSizeH(6),
+  },
+  musicAlbum: {
+    marginTop: scaleSizeH(2),
   },
 })
