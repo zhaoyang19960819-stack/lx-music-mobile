@@ -37,7 +37,8 @@ export default memo(() => {
 const styles = createStyle({
   container: {
     flex: 0,
-    paddingHorizontal: scaleSizeW(12),
+    // 与进度条保持左对齐
+    paddingHorizontal: scaleSizeW(2),
     paddingTop: scaleSizeH(4),
     paddingBottom: scaleSizeH(10),
   },
