@@ -1,0 +1,68 @@
+name: Build APK
+
+# 手动点击运行，或推送到 master 时自动构建
+on:
+  workflow_dispatch:
+    inputs:
+      architectures:
+        description: '要编译的 CPU 架构（逗号分隔）'
+        required: false
+        default: 'arm64-v8a'
+  push:
+    branches:
+      - master
+
+# 同一分支只保留最新一次构建，避免重复排队占用额度
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Android:
+    name: Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v4
+
+      - name: Setup Env
+        uses: ./.github/actions/setup
+
+      # 不依赖任何 Secret：使用仓库自带的 android/app/debug.keystore 给 release 包签名。
+      # build.gradle 的 signingConfigs.release 会优先读取 -PMYAPP_UPLOAD_* 参数，
+      # 这里传入 debug 密钥信息，即可绕开需要 gitignore 的 android/keystore.properties。
+      - name: Build release APK
+        env:
+          DISABLE_SVG: 1
+        shell: bash
+        run: |
+          cd android
+          chmod +x gradlew
+          ARCHS="${{ github.event.inputs.architectures || 'arm64-v8a' }}"
+          echo "Building architectures: $ARCHS"
+          ./gradlew assembleRelease \
+            -PreactNativeArchitectures="$ARCHS" \
+            -PMYAPP_UPLOAD_STORE_FILE=debug.keystore \
+            -PMYAPP_UPLOAD_KEY_ALIAS=androiddebugkey \
+            -PMYAPP_UPLOAD_STORE_PASSWORD=android \
+            -PMYAPP_UPLOAD_KEY_PASSWORD=android
+
+      - name: Show build output
+        shell: bash
+        run: |
+          cd android/app/build/outputs/apk/release
+          ls -lh *.apk
+          md5sum *.apk
+
+      - name: Get package version
+        shell: bash
+        run: echo "PACKAGE_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lx-music-mobile-v${{ env.PACKAGE_VERSION }}-apple-ui
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
