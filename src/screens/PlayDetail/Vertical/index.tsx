@@ -1,7 +1,8 @@
 import { memo, useState, useRef, useMemo, useEffect, useCallback, type ElementRef } from 'react'
-import { View, AppState } from 'react-native'
+import { View, AppState, Animated, Easing } from 'react-native'
 
 import Header from './components/Header'
+import Background from './components/Background'
 // import Aside from './components/Aside'
 // import Main from './components/Main'
 import Player from './Player'
@@ -34,6 +35,17 @@ export default memo(({ componentId }: { componentId: string }) => {
   const [pageIndex, setPageIndex] = useState(0)
   const showLyricRef = useRef(false)
   const pagerRef = useRef<ElementRef<typeof PagerView>>(null)
+  const appear = useRef(new Animated.Value(0)).current
+
+  // 进入页面时内容轻微上浮淡入
+  useEffect(() => {
+    Animated.timing(appear, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start()
+  }, [appear])
 
   const onPageSelected = ({ nativeEvent }: PagerViewOnPageSelectedEvent) => {
     setPageIndex(nativeEvent.position)
@@ -78,38 +90,54 @@ export default memo(({ componentId }: { componentId: string }) => {
   }, [])
 
   return (
-    <>
-      <Header />
-      <View style={styles.container}>
-        <PagerView
-          ref={pagerRef}
-          onPageSelected={onPageSelected}
-          // onPageScrollStateChanged={onPageScrollStateChanged}
-          style={styles.pagerView}
-        >
-          <View collapsable={false}>
-            <Pic componentId={componentId} onPress={showLyric} />
+    <View style={styles.root}>
+      <Background />
+      <Animated.View
+        style={[styles.container, {
+          opacity: appear,
+          transform: [{ translateY: appear.interpolate({ inputRange: [0, 1], outputRange: [scaleSizeH(24), 0] }) }],
+        }]}
+      >
+        <Header />
+        <View style={styles.body}>
+          <PagerView
+            ref={pagerRef}
+            onPageSelected={onPageSelected}
+            // onPageScrollStateChanged={onPageScrollStateChanged}
+            style={styles.pagerView}
+          >
+            <View collapsable={false}>
+              <Pic componentId={componentId} onPress={showLyric} />
+            </View>
+            <View collapsable={false}>
+              <LyricPage activeIndex={pageIndex} />
+            </View>
+          </PagerView>
+          <View style={styles.pageIndicator} pointerEvents='none'>
+            <View style={[styles.pageIndicatorItem, { backgroundColor: theme['c-font'], opacity: pageIndex == 0 ? 0.9 : 0.25 }]} />
+            <View style={[styles.pageIndicatorItem, { backgroundColor: theme['c-font'], opacity: pageIndex == 1 ? 0.9 : 0.25 }]} />
           </View>
-          <View collapsable={false}>
-            <LyricPage activeIndex={pageIndex} />
-          </View>
-        </PagerView>
-        <View style={styles.pageIndicator} pointerEvents='none'>
-          <View style={[styles.pageIndicatorItem, { backgroundColor: theme['c-font'], opacity: pageIndex == 0 ? 0.9 : 0.25 }]} />
-          <View style={[styles.pageIndicatorItem, { backgroundColor: theme['c-font'], opacity: pageIndex == 1 ? 0.9 : 0.25 }]} />
+          <Player />
         </View>
-        <Player />
-      </View>
-    </>
+      </Animated.View>
+    </View>
   )
 })
 
 
 const styles = createStyle({
+  root: {
+    flex: 1,
+    // 背景由 Background 组件绘制，这里保持透明
+    backgroundColor: 'transparent',
+  },
   container: {
     flex: 1,
     flexDirection: 'column',
-    // backgroundColor: '#ccc',
+  },
+  body: {
+    flex: 1,
+    flexDirection: 'column',
   },
   pagerView: {
     flexGrow: 1,
@@ -131,3 +159,4 @@ const styles = createStyle({
     marginHorizontal: scaleSizeH(3),
   },
 })
+
