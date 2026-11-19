@@ -4,9 +4,6 @@ import { View, StyleSheet } from 'react-native'
 
 import { pop } from '@/navigation'
 import StatusBar from '@/components/common/StatusBar'
-import { useTheme } from '@/store/theme/hook'
-import { usePlayerMusicInfo } from '@/store/player/hook'
-import Text from '@/components/common/Text'
 import { scaleSizeH } from '@/utils/pixelRatio'
 import { HEADER_HEIGHT as _HEADER_HEIGHT, NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import commonState from '@/store/common/state'
@@ -16,20 +13,6 @@ import Btn from './Btn'
 import TimeoutExitBtn from './TimeoutExitBtn'
 
 export const HEADER_HEIGHT = scaleSizeH(_HEADER_HEIGHT)
-
-
-const Title = () => {
-  const theme = useTheme()
-  const musicInfo = usePlayerMusicInfo()
-
-
-  return (
-    <View style={styles.titleContent}>
-      <Text numberOfLines={1} style={styles.title}>{musicInfo.name}</Text>
-      <Text numberOfLines={1} style={styles.title} size={12} color={theme['c-font-label']}>{musicInfo.singer}</Text>
-    </View>
-  )
-}
 
 export default memo(() => {
   const popupRef = useRef<SettingPopupType>(null)
@@ -46,10 +29,10 @@ export default memo(() => {
     <View style={{ height: HEADER_HEIGHT + statusBarHeight, paddingTop: statusBarHeight }} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_header}>
       <StatusBar />
       <View style={styles.container}>
-        <Btn icon="chevron-left" onPress={back} />
-        <Title />
+        <Btn icon="chevron-left" rotate={-90} size={20} onPress={back} />
+        <View style={styles.spacer} />
         <TimeoutExitBtn />
-        <Btn icon="slider" onPress={showSetting} />
+        <Btn icon="slider" size={17} onPress={showSetting} />
       </View>
       <SettingPopup ref={popupRef} direction="vertical" />
     </View>
@@ -60,21 +43,10 @@ export default memo(() => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    // justifyContent: 'center',
+    alignItems: 'center',
     height: '100%',
   },
-  titleContent: {
+  spacer: {
     flex: 1,
-    paddingHorizontal: 5,
-    // alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    // flex: 1,
-    // textAlign: 'center',
-  },
-  icon: {
-    paddingLeft: 4,
-    paddingRight: 4,
   },
 })
