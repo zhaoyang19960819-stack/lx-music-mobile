@@ -1,65 +1,81 @@
-import { memo } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { View } from 'react-native'
 
-import Progress from '@/components/player/ProgressBar'
+import AppleProgressBar from '@/components/player/AppleProgressBar'
+import Text from '@/components/common/Text'
 import Status from './Status'
 import { useProgress } from '@/store/player/hook'
 import { useTheme } from '@/store/theme/hook'
 import { createStyle } from '@/utils/tools'
-import Text from '@/components/common/Text'
 import { useBufferProgress } from '@/plugins/player'
+import { scaleSizeW } from '@/utils/pixelRatio'
 
-// const FONT_SIZE = 13
-
-const PlayTimeCurrent = ({ timeStr }: { timeStr: string }) => {
-  const theme = useTheme()
-  // console.log(timeStr)
-  return <Text color={theme['c-500']}>{timeStr}</Text>
+/** 把毫秒格式化为 `分:秒` */
+const formatPlayTime = (time: number) => {
+  if (!Number.isFinite(time) || time < 0) time = 0
+  const totalSecond = Math.floor(time / 1000)
+  const minute = Math.floor(totalSecond / 60)
+  const second = totalSecond % 60
+  return `${minute}:${second < 10 ? '0' : ''}${second}`
 }
 
-const PlayTimeMax = memo(({ timeStr }: { timeStr: string }) => {
+const PlayTime = memo(({ time, prefix = '' }: { time: number, prefix?: string }) => {
   const theme = useTheme()
-  return <Text color={theme['c-500']}>{timeStr}</Text>
+  return (
+    <Text size={11} numberOfLines={1} color={theme['c-500']} style={styles.playTime}>
+      {prefix}{formatPlayTime(time)}
+    </Text>
+  )
 })
 
 export default () => {
-  const { maxPlayTimeStr, nowPlayTimeStr, progress, maxPlayTime } = useProgress()
+  const { nowPlayTime, maxPlayTime, progress } = useProgress()
   const buffered = useBufferProgress()
+  // 拖动进度条时时间跟随手指，松手后回到真实播放进度
+  const [dragProgress, setDragProgress] = useState<number | null>(null)
 
-  // console.log('render playInfo')
+  const handleDragChange = useCallback((nextProgress: number, dragging: boolean) => {
+    setDragProgress(dragging ? nextProgress : null)
+  }, [])
+
+  const showTime = dragProgress == null ? nowPlayTime : maxPlayTime * dragProgress
+  const remainTime = Math.max(maxPlayTime - showTime, 0)
 
   return (
     <>
-      <View style={styles.progress}><Progress progress={progress} duration={maxPlayTime} buffered={buffered} /></View>
+      <AppleProgressBar
+        progress={progress}
+        buffered={buffered}
+        duration={maxPlayTime}
+        onDragChange={handleDragChange}
+      />
       <View style={styles.info}>
-        <PlayTimeCurrent timeStr={nowPlayTimeStr} />
-        <View style={styles.status} >
+        <PlayTime time={showTime} />
+        <View style={styles.status}>
           <Status />
         </View>
-        <PlayTimeMax timeStr={maxPlayTimeStr} />
+        <PlayTime time={remainTime} prefix='-' />
       </View>
     </>
   )
 }
 
-
 const styles = createStyle({
-  progress: {
-    flexGrow: 1,
-    flexShrink: 0,
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
   info: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    // alignItems: 'center',
-    // backgroundColor: '#ccc',
+    marginTop: 2,
+    paddingHorizontal: scaleSizeW(2),
   },
   status: {
     flexGrow: 1,
     flexShrink: 1,
-    paddingLeft: 10,
-    paddingRight: 10,
+    paddingHorizontal: scaleSizeW(12),
+  },
+  playTime: {
+    minWidth: scaleSizeW(34),
+    // 避免数字宽度变化导致上下抖动
+    fontVariant: ['tabular-nums'],
   },
 })
