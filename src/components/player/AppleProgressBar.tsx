@@ -51,7 +51,7 @@ export default memo(({ progress, buffered, duration, onDragChange, onSeek }: App
   useEffect(() => {
     const value = clamp(progress)
     progressRef.current = value
-    // 拖动时不跟随播放进度
+    // 拖动中不跟随播放进度，避免与手指争夺
     if (draggingRef.current) return
     Animated.timing(animProgress, {
       toValue: value,
@@ -127,7 +127,7 @@ export default memo(({ progress, buffered, duration, onDragChange, onSeek }: App
     }),
   ).current
 
-  // 以中心缩放 + 位移补偿，使用原生驱动保证拖动/播放时的流畅度
+  // 以中心缩放 + 位移补偿，走原生驱动，保证拖动/播放时帧率稳定
   const fillTransform = [
     { translateX: animProgress.interpolate({ inputRange: [0, 1], outputRange: [-width / 2, 0] }) },
     { scaleX: animProgress },
@@ -142,9 +142,9 @@ export default memo(({ progress, buffered, duration, onDragChange, onSeek }: App
   return (
     <View style={styles.container} onLayout={onLayout} {...panResponder.panHandlers}>
       <View style={styles.barWrap} pointerEvents="none">
-        <Animated.View style={[styles.track, { backgroundColor: theme['c-primary'], transform: [{ scaleY: barScaleY }] }]} />
-        <Animated.View style={[styles.bar, { backgroundColor: theme['c-primary'], transform: bufferedTransform }]} />
-        <Animated.View style={[styles.bar, { backgroundColor: theme['c-font'], transform: fillTransform }]} />
+        <Animated.View style={[styles.bar, styles.track, { backgroundColor: theme['c-primary'], transform: [{ scaleY: barScaleY }] }]} />
+        <Animated.View style={[styles.bar, styles.buffered, { backgroundColor: theme['c-primary'], transform: bufferedTransform }]} />
+        <Animated.View style={[styles.bar, styles.fill, { backgroundColor: theme['c-font'], transform: fillTransform }]} />
         <Animated.View
           style={[styles.thumb, {
             backgroundColor: theme['c-font'],
@@ -170,15 +170,18 @@ const styles = StyleSheet.create({
     width: '100%',
     height: BAR_HEIGHT,
   },
-  track: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: BAR_HEIGHT / 2,
-    opacity: 0.22,
-  },
   bar: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: BAR_HEIGHT / 2,
+  },
+  track: {
+    opacity: 0.22,
+  },
+  buffered: {
     opacity: 0.45,
+  },
+  fill: {
+    opacity: 1,
   },
   thumb: {
     position: 'absolute',
