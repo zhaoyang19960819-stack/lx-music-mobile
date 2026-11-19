@@ -19,10 +19,15 @@ const formatPlayTime = (time: number) => {
   return `${minute}:${second < 10 ? '0' : ''}${second}`
 }
 
-const PlayTime = memo(({ time, prefix = '' }: { time: number, prefix?: string }) => {
+const PlayTime = memo(({ time, prefix = '', align = 'left' }: { time: number, prefix?: string, align?: 'left' | 'right' }) => {
   const theme = useTheme()
   return (
-    <Text size={11} numberOfLines={1} color={theme['c-500']} style={styles.playTime}>
+    <Text
+      size={11}
+      numberOfLines={1}
+      color={theme['c-500']}
+      style={[styles.playTime, align == 'right' ? styles.playTimeRight : null]}
+    >
       {prefix}{formatPlayTime(time)}
     </Text>
   )
@@ -54,7 +59,7 @@ export default () => {
         <View style={styles.status}>
           <Status />
         </View>
-        <PlayTime time={remainTime} prefix='-' />
+        <PlayTime time={remainTime} prefix='-' align='right' />
       </View>
     </>
   )
@@ -64,7 +69,6 @@ const styles = createStyle({
   info: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginTop: 2,
     paddingHorizontal: scaleSizeW(2),
   },
@@ -75,7 +79,10 @@ const styles = createStyle({
   },
   playTime: {
     minWidth: scaleSizeW(34),
-    // 避免数字宽度变化导致上下抖动
+    // 避免数字宽度变化导致时间左右跳动
     fontVariant: ['tabular-nums'],
+  },
+  playTimeRight: {
+    textAlign: 'right',
   },
 })
