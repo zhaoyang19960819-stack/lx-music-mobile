@@ -3,6 +3,7 @@ import { View } from 'react-native'
 
 // import Title from './components/Title'
 import MoreBtn from './components/MoreBtn'
+import TrackInfo from './components/TrackInfo'
 import PlayInfo from './components/PlayInfo'
 import ControlBtn from './components/ControlBtn'
 import { createStyle } from '@/utils/tools'
@@ -12,6 +13,7 @@ import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 export default memo(() => {
   return (
     <View style={styles.container} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_player}>
+      <TrackInfo />
       <PlayInfo />
       <ControlBtn />
       <MoreBtn />
@@ -28,7 +30,7 @@ const styles = createStyle({
     // backgroundColor: 'rgba(0, 0, 0, .1)',
     paddingHorizontal: 15,
     paddingBottom: 15,
-    paddingTop: 5,
+    paddingTop: 0,
     // backgroundColor: AppColors.primary,
     // backgroundColor: 'red',
     flexDirection: 'column',
