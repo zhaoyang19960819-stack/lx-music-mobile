@@ -15,8 +15,8 @@ import { useStatusbarHeight } from '@/store/common/hook'
 import commonState from '@/store/common/state'
 import { scaleSizeH, scaleSizeW } from '@/utils/pixelRatio'
 
-/** 播放控制区大致占用的高度（进度条 + 时间 + 按钮 + 指示点） */
-const PLAYER_HEIGHT = 236
+/** 播放控制区大致占用的高度（进度条 + 时间行 + 按钮 + 指示点） */
+const PLAYER_HEIGHT = 196
 /** 封面下方歌曲信息区域的高度 */
 const INFO_HEIGHT = 78
 
@@ -75,7 +75,7 @@ export default ({ componentId, onPress }: { componentId: string, onPress?: () =>
           style={[styles.picContent, style]}
           contentStyle={styles.picInner}
         >
-          {prevPic && prevPic !== pic ? <Image url={prevPic} style={[styles.picInner, { position: 'absolute' }]} /> : null}
+          {prevPic && prevPic !== pic ? <Image url={prevPic} style={[styles.picInner, styles.prevPic]} /> : null}
           <Animated.View style={[styles.picInner, { opacity: fade }]}>
             <Image url={pic} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic} style={styles.picInner} />
           </Animated.View>
@@ -111,6 +111,11 @@ const styles = createStyle({
   picInner: {
     width: '100%',
     height: '100%',
+  },
+  prevPic: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   info: {
     alignItems: 'center',
